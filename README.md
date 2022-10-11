@@ -1,1 +1,1 @@
-# WISET_Capsnet-medical-image
+# WISET_autocapsnet
