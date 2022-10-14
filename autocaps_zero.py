@@ -1,8 +1,9 @@
-"""neural architecture search for squash function of capsnet from scratch. use primitive math operations to build a 
-squash function that is most accurate and efficient pair with capsnet model in cpu cost. 
-search for new most optimal squash function and save. """
+""" neural architecture search for squash function of capsnet from scratch. use primitive math operations to build a 
+    squash function that is most accurate and efficient pair with capsnet model in cpu cost. 
+    search for new most optimal squash function and save. 
     
 
+ """
 import numpy as np
 import random
 import torch 
@@ -16,6 +17,7 @@ from torchvision import datasets
 import torchvision.transforms as transforms
 from primitive_operation import operation
 from torchvision.datasets import MNIST
+from timeit import timeit
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -102,8 +104,10 @@ class DigitCaps(nn.Module):
         c = b.softmax(dim=1)
         s = (c * u_hat).sum(dim=2)
         # apply "squashing" non-linearity along out_dim
+        
         v = squash(s)
-
+        
+        
         return v
 
 
@@ -195,7 +199,7 @@ def primitive_math_operation():
 
 
 population = []
-population_size = 5
+population_size = 3
 
 
 def generate_population():
@@ -205,32 +209,51 @@ def generate_population():
     return population
 
 
+
+
+
 def squash(x):
     """ return the squash function of x. """
+    global cpu_time 
+    cpu_time =[]
+    
     oper1 = population[0]
     oper2 = population[1]
     oper3 = population[2]
     oper4 = population[3]
     oper5 = population[4]
-
+    
+    start = time.process_time()
     sq = operation(x,oper1)
     sq = operation(sq,oper2)
     sq = operation(sq,oper3)
     sq = operation(sq,oper4)
     sq = operation(sq,oper5)   
-
+    
+    end = time.process_time()
+    cpu_time = end - start    
+    
     return sq
+    
+
+    #cpu cost that prifiling cpu time of new squash function
+def cpu_cost(population):
+    """ return the cpu cost of population. """
+    #timeit(smtm=squash, setup= number=1) 
+       
+    return cpu_time
+        
     
 
     #define fitness function
 def fitness_function(population):
     """ return the fitness of population. """
     fitness = []
+    
     for i in population:
-        fitness.append(model_accuracy(population))
-        #fitness.append([model_accuracy(i), cpu_cost(i)])
-    #itness_sum = fitness.sum()
-    #itness = fitness / fitness_sum
+        #fitness.append(model_accuracy(population))
+        fitness.append([model_accuracy(i), cpu_cost(i)])
+    
     #print('Fitness: {}'.format(fitness))
     return fitness
 
@@ -307,19 +330,8 @@ def model_accuracy(population):
     accuracy = correct / total
     return accuracy
     
-    
+     
 
-
-    
-    #cpu cost that prifiling cpu time of new squash function
-#def cpu_cost(squash_function):
-#    """ return the cpu cost of population. """
-#    start = time.time()
-#    for i in population:
-#        squash(u) #primary caps 기준
-#    end = time.time()
-#    cpu_time = end - start
-#    return cpu_time
 
 
 class searching_new_squash_function(nn.Module):
@@ -328,9 +340,9 @@ class searching_new_squash_function(nn.Module):
         self.population = generate_population()
         self.fitness = fitness_function(self.population)
         self.generation = 0
-        self.generation_size = 10
-        self.population_size = 5
-        self.parent_size = 5
+        self.generation_size = 2
+        self.population_size = 3
+        self.parent_size = 2
         self.mutation_rate = 0.1
         self.mutation_size = 1
 
@@ -345,17 +357,27 @@ class searching_new_squash_function(nn.Module):
         self.fitness = fitness_function(self.population)
         return self.population
    
-      
+ 
     
     def selection(self):
         """ return selected population. """
         fitness = np.array(self.fitness)
+        accufit = fitness[:, 0]
+        cpufit = fitness[:, 1] 
+        #print(cpufit)
+        accufitness_sum  = accufit.sum()
+        cpufitness_sum  = cpufit.sum()
+        fit1 = accufit/ accufitness_sum
+        fit2 = cpufit/ cpufitness_sum
+        fitness = fit1 * fit2
+        fitness_sum  = fitness.sum()
+        fitness = fitness/fitness_sum
         #fitness = fitness[:, 0] * fitness[:, 1] #pareto optimal을 위한 scaling이 필요
         #fitness = 1 / fitness
         population = []
         #fitness = [fitness_function(self.population)]
-        fitness_sum  = fitness.sum()
-        fitness = fitness/fitness_sum
+        #fitness_sum  = fitness.sum()
+        #fitness = fitness/fitness_sum
         #print(fitness)
         for i in range(self.population_size):
             #fitness = [fitness_function(self.population)]
@@ -394,7 +416,7 @@ class searching_new_squash_function(nn.Module):
         """ return the best population. """
         for i in range(self.generation_size):
             self.new_generation()
-        #print(self.population[np.argmax(self.fitness)])
+        print(self.population[np.argmax(self.fitness)])
         return self.population[np.argmax(self.fitness)]
 
 
