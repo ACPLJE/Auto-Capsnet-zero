@@ -111,7 +111,6 @@ class DigitCaps(nn.Module):
         
         v = squash(s)
         
-        
         return v
 
 
@@ -204,7 +203,7 @@ def primitive_math_operation():
 def generate_population():
     """ generate population of squash functions. """
     population = []
-    population_size = 5
+    population_size = 3
     for i in range(population_size):
         population.append(np.random.choice(primitive_math_operation(), 2))
         #population.extend(primitive_math_operation())
@@ -349,7 +348,7 @@ class searching_new_squash_function(nn.Module):
         #self.fitness = fitness_function(self.population)     
         self.generation = 0
         self.generation_size = 1
-        self.population_size = 5
+        self.population_size = 3
         self.parent_size = 1
         self.mutation_rate = 0.1
         self.mutation_size = 1
@@ -421,7 +420,7 @@ class searching_new_squash_function(nn.Module):
                 if np.random.rand() < self.mutation_rate:
                     i[np.random.randint(len(i))] = numpy.random.choice(primitive_math_operation())
             population.append(i)
-        print(population)    
+     
         return population
 
     def search(self):
@@ -435,7 +434,7 @@ class searching_new_squash_function(nn.Module):
         fit2 = 1 *cpufit/ cpufit.sum()
         fitness = fit1 * fit2
         fitness = fitness/fitness.sum()
-        print(self.population)
+      
         #rint('self.population: {}'.format(self.population))
         print('self.population[np.argmax(fitness): {}'.format(self.population[np.argmax(fitness)]))
         return self.population[np.argmax(fitness)]
