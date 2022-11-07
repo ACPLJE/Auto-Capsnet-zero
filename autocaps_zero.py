@@ -376,9 +376,14 @@ class searching_new_squash_function(nn.Module):
         fitness = np.array(self.fitness)
         accufit = fitness[:, 0]
         cpufit = fitness[:, 1] 
-        fit1 = 9 *accufit/ accufit.sum()
-        fit2 = 1 *cpufit/ cpufit.sum()
-        fitness = fit1 * fit2
+        #fit1 = 9 * accufit/ accufit.sum()
+        #fit2 = 1 * cpufit/ cpufit.sum()
+        fit1 = accufit/ accufit.sum()
+        fit1 = 5 * fit1
+        fit2 = 1 / cpufit
+        fit2 = fit2/ fit2.sum()
+        fit2 = 5 * fit2
+        fitness = fit1 + fit2
         fitness = fitness/fitness.sum()
        
         for i in range(self.population_size):
@@ -393,9 +398,14 @@ class searching_new_squash_function(nn.Module):
         fitness = np.array(self.fitness)
         accufit = fitness[:, 0]
         cpufit = fitness[:, 1] 
-        fit1 = 9 *accufit/ accufit.sum()
-        fit2 = 1 *cpufit/ cpufit.sum()
-        fitness = fit1 * fit2
+        #fit1 = 9 * accufit/ accufit.sum()
+        #fit2 = 1 * cpufit/ cpufit.sum()
+        fit1 = accufit/ accufit.sum()
+        fit1 = 5 * fit1
+        fit2 = 1 / cpufit
+        fit2 = fit2/ fit2.sum()
+        fit2 = 5 * fit2
+        fitness = fit1 + fit2
         fitness = fitness/fitness.sum()
         population_index = 0
         parindex = 0
@@ -430,9 +440,12 @@ class searching_new_squash_function(nn.Module):
         fitness = np.array(self.fitness)
         accufit = fitness[:, 0]
         cpufit = fitness[:, 1] 
-        fit1 = 9 *accufit/ accufit.sum()
-        fit2 = 1 *cpufit/ cpufit.sum()
-        fitness = fit1 * fit2
+        fit1 = accufit/ accufit.sum()
+        fit1 = 5 * fit1
+        fit2 = 1 / cpufit
+        fit2 = fit2/ fit2.sum()
+        fit2 = 5 * fit2
+        fitness = fit1 + fit2
         fitness = fitness/fitness.sum()
       
         #rint('self.population: {}'.format(self.population))
