@@ -379,10 +379,10 @@ class searching_new_squash_function(nn.Module):
         #fit1 = 9 * accufit/ accufit.sum()
         #fit2 = 1 * cpufit/ cpufit.sum()
         fit1 = accufit/ accufit.sum()
-        fit1 = 5 * fit1
+        fit1 = 8 * fit1
         fit2 = 1 / cpufit
         fit2 = fit2/ fit2.sum()
-        fit2 = 5 * fit2
+        fit2 = 2 * fit2
         fitness = fit1 + fit2
         fitness = fitness/fitness.sum()
        
@@ -401,10 +401,10 @@ class searching_new_squash_function(nn.Module):
         #fit1 = 9 * accufit/ accufit.sum()
         #fit2 = 1 * cpufit/ cpufit.sum()
         fit1 = accufit/ accufit.sum()
-        fit1 = 5 * fit1
+        fit1 = 8 * fit1
         fit2 = 1 / cpufit
         fit2 = fit2/ fit2.sum()
-        fit2 = 5 * fit2
+        fit2 = 2 * fit2
         fitness = fit1 + fit2
         fitness = fitness/fitness.sum()
         population_index = 0
@@ -441,10 +441,10 @@ class searching_new_squash_function(nn.Module):
         accufit = fitness[:, 0]
         cpufit = fitness[:, 1] 
         fit1 = accufit/ accufit.sum()
-        fit1 = 5 * fit1
+        fit1 = 8 * fit1
         fit2 = 1 / cpufit
         fit2 = fit2/ fit2.sum()
-        fit2 = 5 * fit2
+        fit2 = 2 * fit2
         fitness = fit1 + fit2
         fitness = fitness/fitness.sum()
       
