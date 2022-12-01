@@ -1,9 +1,3 @@
-""" neural architecture search for squash function of capsnet from scratch. use primitive math operations to build a 
-    squash function that is most accurate and efficient pair with capsnet model in cpu cost. 
-    search for new most optimal squash function and save. 
-    
-
- """
 import numpy as np
 import random
 import torch 
@@ -16,6 +10,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets
 import torchvision.transforms as transforms
 from primitive_operation import operation
+from activation_operation import operationa
 from torchvision.datasets import MNIST
 from timeit import timeit
 
@@ -195,18 +190,18 @@ class CapsuleLoss(nn.Module):
 def primitive_math_operation():
     """ return a list of primitive math operations that can be used in neural network. """
 
-    return ['add1','add2','sub1','sub2', 'mul1', 'mul2', 'div1', 'div2', 'sum', 'norm', 'exp1', 'exp2', 'sqrt', 'square', 'cube', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh', 'log', 'log2', 'log10', 'exp', 'expm1', 'relu', 'sigmoid', 'tanh', 'softplus', 'softsign', 'elu', 'selu', 'celu', 'gelu', 'hardshrink', 'hardtanh', 'leakyrelu', 'logsigmoid', 'rrelu']
-#    return ['add1','add2','sub1','sub2', 'mul1', 'mul2', 'div1', 'div2', 'sum', 'norm', 'exp1', 'exp2', 'sqrt', 'square', 'cube', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh', 'log', 'log2', 'log10', 'exp', 'expm1', 'relu', 'sigmoid', 'tanh', 'softplus', 'softsign', 'elu', 'selu', 'celu', 'gelu', 'hardshrink', 'hardtanh', 'leakyrelu', 'logsigmoid', 'prelu', 'rrelu']
-  
+    return ['add1','add2','sub1','sub2', 'mul1', 'mul2', 'div1', 'div2',  'sqrt', 'square', 'cube', 'log', 'log2', 'log10']
 
 
-def generate_population():
+def activation_operation():
+    
+    return ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh','exp', 'exp1', 'exp2','expm1','relu', 'sigmoid', 'tanh', 'softplus', 'softsign', 'elu', 'selu', 'celu', 'gelu', 'hardshrink', 'hardtanh', 'leakyrelu', 'logsigmoid', 'rrelu'] #'norm','sum'
+
+def generate_population(population_size):
     """ generate population of squash functions. """
     population = []
-    population_size = 3
     for i in range(population_size):
-        population.append(np.random.choice(primitive_math_operation(), 2))
-        #population.extend(primitive_math_operation())
+        population.append([np.random.choice(primitive_math_operation()), np.random.choice(activation_operation())])
     print(population)    
     return population
 
@@ -215,7 +210,6 @@ def generate_population():
     #cpu cost that prifiling cpu time of new squash function
 def cpu_cost():
     """ return the cpu cost of population. """
-    #timeit(smtm=squash, setup= number=1) 
        
     return cpu_time
         
@@ -242,7 +236,7 @@ def squash(x):
     global cpu_time 
     cpu_time =[]
     
-
+    
     oper1 = current_pop[0]
     oper2 = current_pop[1]
     #oper3 = current_pop[2]
@@ -251,7 +245,7 @@ def squash(x):
     
     start = time.process_time()
     sq = operation(x,oper1)
-    sq = operation(sq,oper2)
+    sq = operationa(sq,oper2)
     #sq = operation(sq,oper3)
     #sq = operation(sq,oper4)
     #sq = operation(sq,oper5)   
@@ -260,8 +254,19 @@ def squash(x):
     cpu_time = end - start    
     
     return sq
-    
 
+def fitness_scaling(fitness):
+    fitness = np.array(fitness)
+    accufit = fitness[:, 0]
+    cpufit = fitness[:, 1] 
+    fit1 = accufit/ accufit.sum()
+    fit1 = 2 * fit1
+    fit2 = 1 / cpufit
+    fit2 = fit2/ fit2.sum()
+    fit2 = 8 * fit2
+    fitness = fit1 + fit2
+    fitness = fitness/fitness.sum()
+    return fitness
 
     #evaluate model accuracy with new squash function
 def model_accuracy():
@@ -335,10 +340,9 @@ def model_accuracy():
     #Pint('Accuracy: {}'.format(correct / total))
     accuracy = correct / total
     return accuracy
+   
     
-     
-
-
+global bestsquash
 
 class searching_new_squash_function(nn.Module):
     def __init__(self):
@@ -347,24 +351,40 @@ class searching_new_squash_function(nn.Module):
         
         #self.fitness = fitness_function(self.population)     
         self.generation = 0
-        self.generation_size = 1
-        self.population_size = 3
+        self.generation_size = 50
+        self.population_size = 10
         self.parent_size = 1
-        self.mutation_rate = 0.1
+        self.mutation_rate = 0.2
         self.mutation_size = 1
+        
 
     def new_generation(self):
         """ return new generation of population. """
+        
         self.generation += 1
-        self.population = generate_population()
-        self.fitness = fitness_function(self.population)
-        self.population = self.selection()
-        self.population = self.crossover()
-        self.population = self.mutation()
-        self.fitness = fitness_function(self.population)
-        return self.population
+        self.population = generate_population(10)
+        if self.generation == 1:
+            self.fitness = fitness_function(self.population)
+            self.population = self.selection()
+            #self.population = self.crossover()
+            self.population = self.mutation()
+            self.fitness = fitness_function(self.population)
+            self.bestsquash = self.best_squash()
+            
+            return self.population
+        
+        elif self.generation > 1:
+            self.fitness = fitness_function(self.population)
+            self.population[0] = self.bestsquash
+            self.fitness = fitness_function(self.population)
+            self.population = self.selection()
+            #self.population = self.crossover()
+            self.population = self.mutation()
+            self.fitness = fitness_function(self.population)
+            self.bestsquash = self.best_squash()
+            return self.population
    
- 
+        
     
     def selection(self):
         """ return selected population. """  
@@ -372,83 +392,79 @@ class searching_new_squash_function(nn.Module):
         population = []
         population_index = 0
         self.population_index = np.arange(self.population_size)
-               
-        fitness = np.array(self.fitness)
-        accufit = fitness[:, 0]
-        cpufit = fitness[:, 1] 
-        #fit1 = 9 * accufit/ accufit.sum()
-        #fit2 = 1 * cpufit/ cpufit.sum()
-        fit1 = accufit/ accufit.sum()
-        fit1 = 8 * fit1
-        fit2 = 1 / cpufit
-        fit2 = fit2/ fit2.sum()
-        fit2 = 2 * fit2
-        fitness = fit1 + fit2
-        fitness = fitness/fitness.sum()
-       
+     
+        fitness= fitness_scaling(self.fitness)
+        
         for i in range(self.population_size):
             population_index = np.random.choice(self.population_index, p=fitness)
             population.append(self.population[population_index])
-      
         return population
-
-    def crossover(self):
-        """ return crossovered population. """
-        population = []
-        fitness = np.array(self.fitness)
-        accufit = fitness[:, 0]
-        cpufit = fitness[:, 1] 
-        #fit1 = 9 * accufit/ accufit.sum()
-        #fit2 = 1 * cpufit/ cpufit.sum()
-        fit1 = accufit/ accufit.sum()
-        fit1 = 8 * fit1
-        fit2 = 1 / cpufit
-        fit2 = fit2/ fit2.sum()
-        fit2 = 2 * fit2
-        fitness = fit1 + fit2
-        fitness = fitness/fitness.sum()
-        population_index = 0
-        parindex = 0
-        print(fitness)
-        self.population_index = np.arange(self.population_size)
-        for i in range(self.population_size):
-            parent = np.random.choice(self.population_index, self.population_size)
-            child = []
-            for i in range(self.parent_size):
-                #child.append(np.random.choice(parent)[:,i])
-                parindex = np.random.choice(parent, p=fitness)
-                child.append(self.population[parindex])
-            population.extend(child)
        
-        return population
+  
+      
+        
+
+    #def crossover(self):
+    #    """ return crossovered population. """
+    #    population = []
+    #    fitness = np.array(self.fitness)
+    #    accufit = fitness[:, 0]
+    #    cpufit = fitness[:, 1] 
+    #    #fit1 = 9 * accufit/ accufit.sum()
+    #    #fit2 = 1 * cpufit/ cpufit.sum()
+    #    fit1 = accufit/ accufit.sum()
+    #    fit1 = 2 * fit1
+    #    fit2 = 1 / cpufit
+    #    fit2 = fit2/ fit2.sum()
+    #    fit2 = 8 * fit2
+    #    fitness = fit1 + fit2
+    #    fitness = fitness/fitness.sum()
+    #    population_index = 0
+    #    parindex = 0
+    #    #print(fitness)
+    #    self.population_index = np.arange(self.population_size)
+    #    for i in range(self.population_size):
+    #        parent = np.random.choice(self.population_index, self.population_size)
+    #        child = []
+    #        for i in range(self.parent_size):
+    #            #child.append(np.random.choice(parent)[:,i])
+    #            parindex = np.random.choice(parent, p=fitness)
+    #            child.append(self.population[parindex])
+    #        population.extend(child)
+    #   
+    #    return population
 
     def mutation(self):
         """ return mutationed population. """
         population = []
+        mutated = []
+        f = -1
         for i in self.population:
+            f = f+1
             for _ in range(self.mutation_size - 1):
                 if np.random.rand() < self.mutation_rate:
-                    i[np.random.randint(len(i))] = numpy.random.choice(primitive_math_operation())
-            population.append(i)
-     
+                    i[np.random.randint(len(i))] = np.random.choice(primitive_math_operation()), np.random.choice(activation_operation())
+                      
+                else:
+                    i[np.random.randint(len(i))] = self.population[f]
+            population.append(i)   
+            
         return population
+    
+    def best_squash(self):
+        fitness= fitness_scaling(self.fitness)
+        bestsquash = self.population[np.argmax(fitness)]
+        return bestsquash
 
     def search(self):
         """ return the best population. """
         for i in range(self.generation_size):
             self.new_generation()
-        fitness = np.array(self.fitness)
-        accufit = fitness[:, 0]
-        cpufit = fitness[:, 1] 
-        fit1 = accufit/ accufit.sum()
-        fit1 = 8 * fit1
-        fit2 = 1 / cpufit
-        fit2 = fit2/ fit2.sum()
-        fit2 = 2 * fit2
-        fitness = fit1 + fit2
-        fitness = fitness/fitness.sum()
-      
-        #rint('self.population: {}'.format(self.population))
+            
+        
+        fitness= fitness_scaling(self.fitness)
+        
+        
         print('self.population[np.argmax(fitness): {}'.format(self.population[np.argmax(fitness)]))
         return self.population[np.argmax(fitness)]
 
